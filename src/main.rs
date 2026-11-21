@@ -1,4 +1,5 @@
 use clap::Parser;
+use rand::random;
 use std::net::{ToSocketAddrs, UdpSocket};
 
 mod types;
@@ -50,7 +51,7 @@ fn main() {
 fn build_query(domain: &str, record_type: RecordType) -> Vec<u8> {
     let mut packet: Vec<u8> = Vec::new();
 
-    let id: u16 = 0x1234;
+    let id: u16 = random();
     let flags: u16 = 0x0100;
     let qdcount: u16 = 1;
     let ancount: u16 = 0;
@@ -68,10 +69,12 @@ fn build_query(domain: &str, record_type: RecordType) -> Vec<u8> {
         packet.push(label.len() as u8);
         packet.extend_from_slice(label.as_bytes());
     }
+
     packet.push(0);
 
     let qtype = record_type as u16;
     packet.extend_from_slice(&qtype.to_be_bytes());
     packet.extend_from_slice(&1u16.to_be_bytes());
+
     packet
 }
