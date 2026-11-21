@@ -1,5 +1,5 @@
 use clap::Parser;
-use std::net::UdpSocket;
+use std::net::{ToSocketAddrs, UdpSocket};
 
 mod types;
 use types::RecordType;
@@ -8,12 +8,27 @@ use types::RecordType;
 #[command(version, about, long_about = None)]
 struct Args {
     domain: String,
+
+    #[arg(default_value = "1.1.1.1")]
+    resolver: String,
 }
 
 fn main() {
     let args = Args::parse();
 
-    let socket: UdpSocket = UdpSocket::bind("0.0.0.0:0").expect("Bind fehlgeschlagen");
+    let target = (args.resolver.as_str(), 53)
+        .to_socket_addrs()
+        .expect("Ungültige Adresse")
+        .next()
+        .expect("Keine Adresse gefunden");
+
+    let bind_addr = if target.is_ipv6() {
+        "[::]:0"
+    } else {
+        "0.0.0.0:0"
+    };
+
+    let socket: UdpSocket = UdpSocket::bind(bind_addr).expect("Bind fehlgeschlagen");
 
     let mut packet: Vec<u8> = Vec::new();
 
@@ -41,7 +56,7 @@ fn main() {
     packet.extend_from_slice(&1u16.to_be_bytes());
 
     socket
-        .send_to(&packet, "1.1.1.1:53")
+        .send_to(&packet, (args.resolver.as_str(), 53))
         .expect("Senden fehlgeschlagen");
 
     let mut buf = [0u8; 512];
