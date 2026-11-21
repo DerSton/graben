@@ -33,6 +33,21 @@ fn main() {
 
     let socket: UdpSocket = UdpSocket::bind(bind_addr).expect("Bind fehlgeschlagen");
 
+    let packet = build_query(&args.domain, args.record_type);
+
+    socket
+        .send_to(&packet, (args.resolver.as_str(), 53))
+        .expect("Senden fehlgeschlagen");
+
+    let mut buf = [0u8; 512];
+
+    let (anzahl, _) = socket
+        .recv_from(&mut buf)
+        .expect("Empfangen fehlgeschlagen");
+    println!("{:02x?}", &buf[..anzahl]);
+}
+
+fn build_query(domain: &str, record_type: RecordType) -> Vec<u8> {
     let mut packet: Vec<u8> = Vec::new();
 
     let id: u16 = 0x1234;
@@ -49,24 +64,14 @@ fn main() {
     packet.extend_from_slice(&nscount.to_be_bytes());
     packet.extend_from_slice(&arcount.to_be_bytes());
 
-    for label in args.domain.split(".") {
+    for label in domain.split(".") {
         packet.push(label.len() as u8);
         packet.extend_from_slice(label.as_bytes());
     }
     packet.push(0);
 
-    let qtype = args.record_type as u16;
+    let qtype = record_type as u16;
     packet.extend_from_slice(&qtype.to_be_bytes());
     packet.extend_from_slice(&1u16.to_be_bytes());
-
-    socket
-        .send_to(&packet, (args.resolver.as_str(), 53))
-        .expect("Senden fehlgeschlagen");
-
-    let mut buf = [0u8; 512];
-
-    let (anzahl, _) = socket
-        .recv_from(&mut buf)
-        .expect("Empfangen fehlgeschlagen");
-    println!("{:02x?}", &buf[..anzahl]);
+    packet
 }
