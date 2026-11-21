@@ -60,6 +60,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           EXT: ${{ matrix.ext }}
         run: |
-          ASSET="${BIN_NAME}-${{ matrix.target }}${EXT}"
-          mv "target/${{ matrix.target }}/release/${BIN_NAME}${EXT}" "$ASSET"
-          gh release upload "${{ github.event.release.tag_name }}" "$ASSET" --clobber
+          gh release upload "${{ github.event.release.tag_name }}" "${BIN_NAME}-${{ matrix.target }}${EXT}" --clobber
