@@ -1,5 +1,5 @@
 #[repr(u16)]
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, clap::ValueEnum)]
 pub enum RecordType {
     A = 1,
     NS = 2,

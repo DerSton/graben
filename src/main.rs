@@ -9,6 +9,9 @@ use types::RecordType;
 struct Args {
     domain: String,
 
+    #[arg(value_enum, default_value_t = RecordType::A, ignore_case = true)]
+    record_type: RecordType,
+
     #[arg(default_value = "1.1.1.1")]
     resolver: String,
 }
@@ -51,7 +54,8 @@ fn main() {
         packet.extend_from_slice(label.as_bytes());
     }
     packet.push(0);
-    let qtype = RecordType::ANY as u16;
+
+    let qtype = args.record_type as u16;
     packet.extend_from_slice(&qtype.to_be_bytes());
     packet.extend_from_slice(&1u16.to_be_bytes());
 
